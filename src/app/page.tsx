@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import Image from "next/image";
 import { useDropzone } from "react-dropzone";
 import { Copy, UploadCloud, Calculator, Trash2, Edit2, CheckCircle, AlertTriangle, FileText, Settings, X, ChevronDown, ChevronUp, HelpCircle } from "lucide-react";
 import { Part, SheetOptions, CalculationResult } from "@/types";
@@ -141,11 +142,20 @@ export default function Home() {
 
         {/* Header */}
         <header className="flex justify-between items-center pb-6 border-b border-gray-200">
-          <div>
-            <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-              OptiSheet Pro
-            </h1>
-            <p className="text-gray-500 mt-1">Intelligent Sheet Optimizer & Cut List Estimator</p>
+          <div className="flex items-center gap-4">
+            <Image
+              src="/saw-with-handle-cutting-wood-svgrepo-com.svg"
+              alt="OptiSheet Pro Logo"
+              width={48}
+              height={48}
+              className="w-12 h-12 text-blue-600"
+            />
+            <div>
+              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+                OptiSheet Pro
+              </h1>
+              <p className="text-gray-500 mt-1">Intelligent Sheet Optimizer & Cut List Estimator</p>
+            </div>
           </div>
           <div className="flex gap-4">
             <button
@@ -507,7 +517,7 @@ export default function Home() {
                       <CheckCircle className="w-4 h-4" /> Recommendation
                     </p>
                     <p className="mt-1">
-                      Order <span className="font-bold">{result.sheetsPackingMethod} sheets</span> of {settings.sheetWidth}x{settings.sheetHeight}".
+                      Order <span className="font-bold">{result.sheetsPackingMethod} sheets</span> of {settings.sheetWidth}x{settings.sheetHeight}&quot;.
                       Based on packing efficiency. (Simple Area calc suggests {result.sheetsAreaMethod}).
                     </p>
                     {result.unpackedParts.length > 0 && (
@@ -515,10 +525,10 @@ export default function Home() {
                         <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                         <div>
                           <p className="font-bold">Warning: {result.unpackedParts.length} parts could not fit!</p>
-                          <p className="mt-1">They are larger than the usable sheet area ({settings.sheetWidth - settings.margin * 2}x{settings.sheetHeight - settings.margin * 2}"). Check dimensions.</p>
+                          <p className="mt-1">They are larger than the usable sheet area ({settings.sheetWidth - settings.margin * 2}x{settings.sheetHeight - settings.margin * 2}&quot;). Check dimensions.</p>
                           <ul className="list-disc list-inside mt-2 text-xs">
                             {result.unpackedParts.slice(0, 3).map(p => (
-                              <li key={p.id}>{p.category} ({p.width}" x {p.height}")</li>
+                              <li key={p.id}>{p.category} ({p.width}&quot; x {p.height}&quot;)</li>
                             ))}
                             {result.unpackedParts.length > 3 && <li>...and more</li>}
                           </ul>

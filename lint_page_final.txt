@@ -1,0 +1,18 @@
+
+C:\Users\organ\Documents\Code\OptiSheet_Pro\src\app\page.tsx
+    6:49   warning  'Edit2' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+    6:104  warning  'X' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+    6:107  warning  'ChevronDown' is defined but never used                                                                       @typescript-eslint/no-unused-vars
+    6:120  warning  'ChevronUp' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+   78:53   error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   92:21   error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  106:6    warning  React Hook useCallback has a missing dependency: 'jobName'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  131:61   error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  237:33   warning  'isNum' is assigned a value but never used                                                                    @typescript-eslint/no-unused-vars
+  247:40   warning  'e' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+  411:99   error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  464:88   error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  562:44   error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+
+??? 13 problems (6 errors, 7 warnings)
+
