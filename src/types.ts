@@ -37,6 +37,7 @@ export interface PackedSheet {
     height: number;
     parts: {
         partId: string;
+        category: string;
         x: number;
         y: number;
         w: number;
@@ -44,6 +45,12 @@ export interface PackedSheet {
         rotated: boolean;
     }[];
     wasteArea: number;
+    leftovers: {
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+    }[];
 }
 
 export interface CalculationResult {

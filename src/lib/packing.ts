@@ -13,38 +13,39 @@ class SheetPacker {
     height: number;
     kerf: number;
     freeRects: Rect[] = [];
-    placedItems: { partId: string; x: number; y: number; w: number; h: number; rotated: boolean }[] = [];
+    placedItems: { partId: string; category: string; x: number; y: number; w: number; h: number; rotated: boolean }[] = [];
+    // expose public
+    get leftovers() { return this.freeRects; }
 
     constructor(width: number, height: number, kerf: number) {
         this.width = width;
         this.height = height;
         this.kerf = kerf;
-        this.freeRects = [{ x: 0, y: 0, w: width, h: height }];
+        // Initialize free rects
+        // Round to 3 decimal places to avoid initial floating point noise if inputs were messy
+        const w = Math.floor(width * 1000) / 1000;
+        const h = Math.floor(height * 1000) / 1000;
+        this.freeRects = [{ x: 0, y: 0, w, h }];
     }
 
     place(part: Part, allowRotation: boolean): boolean {
-        // Part dimensions + kerf (we treat kerf as occupied space on the right/bottom of cut)
-        // Actually simpler: Treat part as w+kerf, h+kerf.
+        // Part dimensions
         // Placement logic must ensure it fits within free rect.
+        const EPSILON = 0.01;
 
         // We search best fit among free rects
         let bestScore = Number.MAX_VALUE;
         let bestRectIndex = -1;
         let bestRotated = false;
 
-        // Expand part with kerf for placement calculation
-        const pW = part.width + this.kerf;
-        const pH = part.height + this.kerf;
-
         for (let i = 0; i < this.freeRects.length; i++) {
             const rect = this.freeRects[i];
 
             // Try normal orientation
-            if (rect.w >= pW && rect.h >= pH) {
-                const score = rect.w * rect.h - pW * pH; // Minimize area waste (Best Area Fit)
-                // Alternative: Minimize short side residual (Best Short Side Fit) - better for long strips
-                // const score = Math.min(rect.w - pW, rect.h - pH); 
-
+            // Check if rect fits part dimensions (ignoring kerf for the check, but we will consume it if we can)
+            // Using a slightly more permissive EPSILON to handle floating point drift
+            if (rect.w >= part.width - EPSILON && rect.h >= part.height - EPSILON) {
+                const score = rect.w * rect.h - part.width * part.height;
                 if (score < bestScore) {
                     bestScore = score;
                     bestRectIndex = i;
@@ -53,8 +54,8 @@ class SheetPacker {
             }
 
             // Try rotated
-            if (allowRotation && rect.w >= pH && rect.h >= pW) {
-                const score = rect.w * rect.h - pH * pW;
+            if (allowRotation && rect.w >= part.height - EPSILON && rect.h >= part.width - EPSILON) {
+                const score = rect.w * rect.h - part.height * part.width;
                 if (score < bestScore) {
                     bestScore = score;
                     bestRectIndex = i;
@@ -67,29 +68,27 @@ class SheetPacker {
 
         // Place the part
         const rect = this.freeRects[bestRectIndex];
-        const placedWidth = bestRotated ? pH : pW;
-        const placedHeight = bestRotated ? pW : pH;
-
-        // Record placement (without kerf for visual, or with?)
-        // Visuals usually want exact part dimensions.
-        // The *space* consumed includes kerf.
-        // We store visual position as rect.x, rect.y.
+        const placedWidth = bestRotated ? part.height : part.width;
+        const placedHeight = bestRotated ? part.width : part.height;
 
         this.placedItems.push({
             partId: part.id,
-            x: rect.x + (this.kerf / 2), // Center in kerf gap? Or just align?
-            // Alignment: Usually cut starts at edges. 
-            // Simplest: x, y are cut lines. Part is inside.
-            // We'll store x, y as the top-left corner of the part itself.
+            x: rect.x + (this.kerf / 2), // Visual: assume kerf is split? Or just start at edge? usually edge.
             y: rect.y + (this.kerf / 2),
-            w: bestRotated ? part.height : part.width,
-            h: bestRotated ? part.width : part.height,
+            w: placedWidth,
+            h: placedHeight,
+            category: part.category,
             rotated: bestRotated
         });
 
         // Remove used rect
         // Split remaining space (Guillotine)
-        this.splitRect(bestRectIndex, placedWidth, placedHeight);
+        // Consumed space includes kerf.
+        // But we must NOT consume more than exists.
+        const consumedW = Math.min(rect.w, placedWidth + this.kerf);
+        const consumedH = Math.min(rect.h, placedHeight + this.kerf);
+
+        this.splitRect(bestRectIndex, consumedW, consumedH);
 
         return true;
     }
@@ -107,7 +106,7 @@ class SheetPacker {
         // Standard heuristic: "Split Shorter Leftover Axis" (SAS)
         // If wRem < hRem, split horizontally (full width bottom strip).
 
-        let newRects: Rect[] = [];
+        const newRects: Rect[] = [];
         const splitHorizontally = wRem < hRem; // Maximize the bigger free area?
 
         if (splitHorizontally) {
@@ -142,7 +141,7 @@ export function packParts(parts: Part[], options: SheetOptions): CalculationResu
 
     // 2. Packing Method
     // Prepare flattened list of items
-    let itemsToPack: Part[] = [];
+    const itemsToPack: Part[] = [];
     validParts.forEach(p => {
         for (let i = 0; i < p.qty; i++) {
             // Create unique instance for each unit to avoid key collisions
@@ -161,10 +160,10 @@ export function packParts(parts: Part[], options: SheetOptions): CalculationResu
     const rotationAllowed = options.grainDirection === "None";
 
     // Usable dimensions
-    // For packing, we reduce sheet size by margin * 2
-    // If margin is 0.25 on each side, width reduces by 0.5.
-    const usableW = options.sheetWidth - (options.margin * 2);
-    const usableH = options.sheetHeight - (options.margin * 2);
+    // Round to 3 decimals to avoid javascript float weirdness
+    // Example: 96 - (0 * 2) = 96.0000 
+    const usableW = Math.floor((options.sheetWidth - (options.margin * 2)) * 1000) / 1000;
+    const usableH = Math.floor((options.sheetHeight - (options.margin * 2)) * 1000) / 1000;
 
     const unpacked: Part[] = [];
 
@@ -204,7 +203,8 @@ export function packParts(parts: Part[], options: SheetOptions): CalculationResu
         width: options.sheetWidth,
         height: options.sheetHeight,
         parts: s.placedItems,
-        wasteArea: (usableW * usableH) - s.placedItems.reduce((sum, item) => sum + (item.w * item.h), 0) // Area inside margin
+        wasteArea: (usableW * usableH) - s.placedItems.reduce((sum, item) => sum + (item.w * item.h), 0),
+        leftovers: s.leftovers
     }));
 
     return {

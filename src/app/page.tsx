@@ -3,10 +3,11 @@
 import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { useDropzone } from "react-dropzone";
-import { Copy, UploadCloud, Calculator, Trash2, Edit2, CheckCircle, AlertTriangle, FileText, Settings, X, ChevronDown, ChevronUp, HelpCircle } from "lucide-react";
+import { Copy, UploadCloud, Calculator, Trash2, Edit2, CheckCircle, AlertTriangle, FileText, Settings, X, ChevronDown, ChevronUp, HelpCircle, LayoutGrid } from "lucide-react";
 import { Part, SheetOptions, CalculationResult } from "@/types";
 import { cn } from "@/lib/utils";
 import { packParts } from "@/lib/packing";
+import SheetVisualizer from "@/components/SheetVisualizer";
 
 export default function Home() {
   // State
@@ -352,6 +353,24 @@ export default function Home() {
               )}
             </div>
 
+            {/* Visual Diagrams (Moved to Left Column) */}
+            {result && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h3 className="font-semibold text-gray-800 mb-6 flex items-center gap-2 text-lg border-b pb-4">
+                  <LayoutGrid className="w-5 h-5 text-indigo-600" /> Cutting Diagrams ({result.packedSheets.length} Sheets)
+                </h3>
+                <div className="space-y-8">
+                  {result.packedSheets.map((sheet) => (
+                    <SheetVisualizer
+                      key={sheet.sheetId}
+                      sheet={sheet}
+                      margin={settings.margin}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
           </div>
 
           {/* Right Column: Settings & Results */}
@@ -525,7 +544,8 @@ export default function Home() {
                         <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                         <div>
                           <p className="font-bold">Warning: {result.unpackedParts.length} parts could not fit!</p>
-                          <p className="mt-1">They are larger than the usable sheet area ({settings.sheetWidth - settings.margin * 2}x{settings.sheetHeight - settings.margin * 2}&quot;). Check dimensions.</p>
+                          <p className="mt-1">The parts below exceed usable dimensions (Sheet: {settings.sheetWidth - settings.margin * 2}x{settings.sheetHeight - settings.margin * 2}&quot;). Try rotating or checking grain direction.</p>
+                          <p className="mt-1 text-xs text-red-500 font-semibold">Tip: If dimensions match exactly, try reducing margin to 0.</p>
                           <ul className="list-disc list-inside mt-2 text-xs">
                             {result.unpackedParts.slice(0, 3).map(p => (
                               <li key={p.id}>{p.category} ({p.width}&quot; x {p.height}&quot;)</li>
@@ -595,11 +615,15 @@ export default function Home() {
                       ))}
                     </div>
                   </div>
+
+
                 </div>
               </div>
             )}
 
           </div>
+
+
 
         </div>
 

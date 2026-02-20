@@ -1,0 +1,8 @@
+
+C:\Users\organ\Documents\Code\OptiSheet_Pro\src\lib\packing.ts
+  103:13  error  'newRects' is never reassigned. Use 'const' instead     prefer-const
+  138:9   error  'itemsToPack' is never reassigned. Use 'const' instead  prefer-const
+
+??? 2 problems (2 errors, 0 warnings)
+  2 errors and 0 warnings potentially fixable with the `--fix` option.
+
